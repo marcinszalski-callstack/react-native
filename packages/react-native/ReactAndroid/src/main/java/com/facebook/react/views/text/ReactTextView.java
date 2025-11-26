@@ -35,6 +35,7 @@ import androidx.core.view.ViewCompat;
 import androidx.customview.widget.ExploreByTouchHelper;
 import com.facebook.common.logging.FLog;
 import com.facebook.infer.annotation.Nullsafe;
+import com.facebook.react.R;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.common.ReactConstants;
@@ -48,6 +49,7 @@ import com.facebook.react.uimanager.ReactCompoundView;
 import com.facebook.react.uimanager.ViewDefaults;
 import com.facebook.react.uimanager.style.BorderRadiusProp;
 import com.facebook.react.uimanager.style.BorderStyle;
+import com.facebook.react.uimanager.style.ClipPath;
 import com.facebook.react.uimanager.style.LogicalEdge;
 import com.facebook.react.uimanager.style.Overflow;
 import com.facebook.react.util.AndroidVersion;
@@ -287,6 +289,12 @@ public class ReactTextView extends AppCompatTextView implements ReactCompoundVie
         BackgroundStyleApplicator.clipToPaddingBox(this, canvas);
       }
 
+      ClipPath clipPath = (ClipPath) getTag(R.id.clip_path);
+      if (clipPath != null) {
+        canvas.save();
+        BackgroundStyleApplicator.applyClipPathIfPresent(this, canvas);
+      }
+
       if (spanned != null) {
         Layout layout = getLayout();
         if (layout != null) {
@@ -308,6 +316,10 @@ public class ReactTextView extends AppCompatTextView implements ReactCompoundVie
         }
       } else {
         super.onDraw(canvas);
+      }
+
+      if (clipPath != null) {
+        canvas.restore();
       }
     }
   }
