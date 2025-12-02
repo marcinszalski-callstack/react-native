@@ -102,7 +102,6 @@ import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
-import androidx.core.graphics.withSave
 
 /**
  * A wrapper around the EditText that lets us better control what happens when an EditText gets
@@ -1272,9 +1271,16 @@ public open class ReactEditText public constructor(context: Context) : AppCompat
   }
 
   public override fun draw(canvas: Canvas) {
-    canvas.withSave {
-      BackgroundStyleApplicator.applyClipPathIfPresent(this@ReactEditText, this)
-      super.draw(this)
+    val clipPath = BackgroundStyleApplicator.getClipPath(this)
+    if (clipPath != null) {
+      canvas.save()
+      BackgroundStyleApplicator.applyClipPathIfPresent(this, canvas)
+    }
+
+    super.draw(canvas)
+
+    if (clipPath != null) {
+      canvas.restore()
     }
   }
 
