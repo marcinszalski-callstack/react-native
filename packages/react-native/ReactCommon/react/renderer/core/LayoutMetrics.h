@@ -48,6 +48,11 @@ struct LayoutMetrics {
   // (like when using `overflow: clip` on Web).
   EdgeInsets overflowInset{};
 
+  // Width of the margins in each direction.
+  EdgeInsets marginInsets{};
+  // Width of the paddings in each direction.
+  EdgeInsets paddingInsets{};
+
   // Origin: the outer border of the node.
   // Size: includes content only.
   Rect getContentFrame() const
@@ -123,7 +128,9 @@ struct hash<facebook::react::LayoutMetrics> {
         layoutMetrics.layoutDirection,
         layoutMetrics.pointScaleFactor,
         layoutMetrics.fontSizeMultiplier,
-        layoutMetrics.overflowInset);
+        layoutMetrics.overflowInset,
+        layoutMetrics.marginInsets,
+        layoutMetrics.paddingInsets);
   }
 };
 
