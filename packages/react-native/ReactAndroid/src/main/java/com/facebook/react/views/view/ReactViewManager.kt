@@ -370,7 +370,6 @@ public open class ReactViewManager : ReactClippingViewManager<ReactViewGroup>() 
     view.setNeedsOffscreenAlphaCompositing(needsOffscreenAlphaCompositing)
   }
 
-
   @ReactPropGroup(
       names =
           [
