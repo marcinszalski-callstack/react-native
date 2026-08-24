@@ -12,6 +12,7 @@ import type {PartialViewConfigWithoutName} from './PlatformBaseViewConfig';
 
 import ReactNativeStyleAttributes from '../Components/View/ReactNativeStyleAttributes';
 import {
+  backdropFilterAttribute,
   backgroundImageAttribute,
   backgroundPositionAttribute,
   backgroundRepeatAttribute,
@@ -220,6 +221,7 @@ const validAttributesForNonEventProps = {
   backgroundRepeat: backgroundRepeatAttribute,
   experimental_backgroundRepeat: backgroundRepeatAttribute,
   boxShadow: boxShadowAttribute,
+  backdropFilter: backdropFilterAttribute,
   filter: filterAttribute,
   mixBlendMode: true,
   isolation: true,
