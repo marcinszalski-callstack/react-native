@@ -17,6 +17,7 @@
 
 #import <RCTSwiftUIWrapper/RCTSwiftUIContainerViewWrapper.h>
 #import <React/RCTAssert.h>
+#import <React/RCTBackdropFilterUtils.h>
 #import <React/RCTBackgroundImageUtils.h>
 #import <React/RCTBorderDrawing.h>
 #import <React/RCTBoxShadow.h>
@@ -111,6 +112,7 @@ static BOOL RCTViewIsInteractiveAccessibilityElement(UIView *view, const ViewPro
   CALayer *_outlineLayer;
   NSMutableArray<CALayer *> *_boxShadowLayers;
   CALayer *_filterLayer;
+  BOOL _hasBackdropDropShadow;
   NSMutableArray<CALayer *> *_backgroundImageLayers;
   BOOL _needsInvalidateLayer;
   BOOL _isJSResponder;
@@ -587,6 +589,11 @@ static BOOL RCTLayerTransformCollapsesAxis(CALayer *layer)
     needsInvalidateLayer = YES;
   }
 
+  // `backdropFilter`
+  if (oldViewProps.backdropFilter != newViewProps.backdropFilter) {
+    needsInvalidateLayer = YES;
+  }
+
   // `focusable`
 #if TARGET_OS_TV
   if (oldViewProps.focusable != newViewProps.focusable) {
@@ -773,6 +780,8 @@ static BOOL RCTLayerTransformCollapsesAxis(CALayer *layer)
   _outlineLayer = nil;
   [_filterLayer removeFromSuperlayer];
   _filterLayer = nil;
+  [RCTBackdropFilterUtils clearBackdropFilterFromLayer:self.layer];
+  _hasBackdropDropShadow = NO;
   [self clearExistingBackgroundImageLayers];
 
   _propKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN = nil;
@@ -1279,6 +1288,23 @@ static RCTBorderStyle RCTBorderStyleFromOutlineStyle(OutlineStyle outlineStyle)
       // add
       _filterLayer.zPosition = CGFLOAT_MAX;
       [layer addSublayer:_filterLayer];
+    }
+  }
+
+  // backdrop filter
+  [RCTBackdropFilterUtils clearBackdropFilterFromLayer:self.layer];
+  _hasBackdropDropShadow = NO;
+  if (!_props->backdropFilter.empty()) {
+    NSArray<CIFilter *> *backgroundFilters =
+        [RCTBackdropFilterUtils backgroundFiltersFromFilterFunctions:_props->backdropFilter];
+    self.layer.backgroundFilters = backgroundFilters;
+
+    for (const auto &primitive : _props->backdropFilter) {
+      if (primitive.type == FilterType::DropShadow) {
+        [RCTBackdropFilterUtils applyDropShadow:primitive toLayer:self.layer];
+        _hasBackdropDropShadow = YES;
+        break;
+      }
     }
   }
 
