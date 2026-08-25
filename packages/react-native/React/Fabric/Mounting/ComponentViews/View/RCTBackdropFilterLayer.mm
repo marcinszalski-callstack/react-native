@@ -26,30 +26,24 @@
     return;
   }
 
-  CGFloat scale = UIScreen.mainScreen.scale;
   // host.frame is in the backdrop view's coordinate system.
   CGRect hostFrameInBackdrop = host.frame;
 
-  // Temporarily hide the host view so its own content is excluded from the
-  // backdrop capture. afterScreenUpdates:NO reads the already-committed
-  // compositor output, so hiding here is sufficient.
   host.hidden = YES;
 
-  UIGraphicsBeginImageContextWithOptions(captureSize, NO, scale);
-  CGContextRef ctx = UIGraphicsGetCurrentContext();
-  // Translate so the area of the backdrop that sits behind the host view
-  // maps to origin (0, 0) in the capture context.
-  CGContextTranslateCTM(ctx, -hostFrameInBackdrop.origin.x, -hostFrameInBackdrop.origin.y);
-  [backdrop drawHierarchy:backdrop.bounds afterScreenUpdates:NO];
-  UIImage *snapshot = UIGraphicsGetImageFromCurrentImageContext();
-  UIGraphicsEndImageContext();
+  UIGraphicsImageRendererFormat *format = [UIGraphicsImageRendererFormat preferredFormat];
+  format.opaque = NO;
+  UIGraphicsImageRenderer *renderer = [[UIGraphicsImageRenderer alloc] initWithSize:captureSize format:format];
+
+  UIImage *snapshot = [renderer imageWithActions:^(UIGraphicsImageRendererContext *rendererCtx) {
+    CGContextRef ctx = rendererCtx.CGContext;
+    // Translate so the area of the backdrop that sits behind the host view
+    // maps to origin (0, 0) in the capture context.
+    CGContextTranslateCTM(ctx, -hostFrameInBackdrop.origin.x, -hostFrameInBackdrop.origin.y);
+    [backdrop.layer renderInContext:ctx];
+  }];
 
   host.hidden = NO;
-
-  if (!snapshot) {
-    self.contents = nil;
-    return;
-  }
 
   CIImage *ciImage = [CIImage imageWithCGImage:snapshot.CGImage];
   CIImage *filtered = [RCTBackdropFilterUtils applyCIFilterFunctions:_filterFunctions toImage:ciImage];
