@@ -7,7 +7,8 @@
 
 #import "RCTBackdropFilterUtils.h"
 
-#import <CoreImage/CoreImage.h>
+#import "RCTBackdropFilterLayer.h"
+
 #import <React/RCTConversions.h>
 #import <react/renderer/graphics/Filter.h>
 
@@ -15,23 +16,27 @@ using namespace facebook::react;
 
 @implementation RCTBackdropFilterUtils
 
-+ (nullable NSArray<CIFilter *> *)backgroundFiltersFromFilterFunctions:
-    (const std::vector<FilterFunction> &)filterFunctions
++ (CIImage *)applyCIFilterFunctions:(const std::vector<FilterFunction> &)filterFunctions
+                            toImage:(CIImage *)image
 {
-  if (filterFunctions.empty()) {
-    return nil;
-  }
-
-  NSMutableArray<CIFilter *> *filters = [NSMutableArray array];
-
+  CIImage *result = image;
   for (const auto &primitive : filterFunctions) {
-    CIFilter *ciFilter = [self _ciFilterFromFilterFunction:primitive];
-    if (ciFilter != nil) {
-      [filters addObject:ciFilter];
+    if (primitive.type == FilterType::DropShadow) {
+      // Drop-shadow cannot be expressed as a CIFilter applied to a flat image;
+      // it is handled separately via CALayer shadow properties.
+      continue;
+    }
+    CIFilter *filter = [self _ciFilterFromFilterFunction:primitive];
+    if (!filter) {
+      continue;
+    }
+    [filter setValue:result forKey:kCIInputImageKey];
+    CIImage *output = filter.outputImage;
+    if (output) {
+      result = output;
     }
   }
-
-  return filters.count > 0 ? [filters copy] : nil;
+  return result;
 }
 
 + (void)applyDropShadow:(const FilterFunction &)filterFunction toLayer:(CALayer *)layer
@@ -54,7 +59,11 @@ using namespace facebook::react;
 
 + (void)clearBackdropFilterFromLayer:(CALayer *)layer
 {
-  layer.backgroundFilters = nil;
+  for (CALayer *sublayer in [layer.sublayers copy]) {
+    if ([sublayer isKindOfClass:[RCTBackdropFilterLayer class]]) {
+      [sublayer removeFromSuperlayer];
+    }
+  }
   layer.shadowColor = UIColor.clearColor.CGColor;
   layer.shadowOpacity = 0.0f;
   layer.shadowRadius = 0.0f;
@@ -83,8 +92,7 @@ using namespace facebook::react;
       // CSS brightness(n) is multiplicative: 0=black, 1=normal, 2=double.
       // CIColorMatrix scales each RGB channel independently.
       CIFilter *filter = [CIFilter filterWithName:@"CIColorMatrix"];
-      CIVector *scale = [CIVector vectorWithX:value Y:0 Z:0 W:0];
-      [filter setValue:scale forKey:@"inputRVector"];
+      [filter setValue:[CIVector vectorWithX:value Y:0 Z:0 W:0] forKey:@"inputRVector"];
       [filter setValue:[CIVector vectorWithX:0 Y:value Z:0 W:0] forKey:@"inputGVector"];
       [filter setValue:[CIVector vectorWithX:0 Y:0 Z:value W:0] forKey:@"inputBVector"];
       [filter setValue:[CIVector vectorWithX:0 Y:0 Z:0 W:1] forKey:@"inputAVector"];
@@ -162,8 +170,7 @@ using namespace facebook::react;
     }
 
     case FilterType::DropShadow:
-      // Handled separately via applyDropShadow:toLayer: — cannot be expressed
-      // as a backgroundFilters CIFilter.
+      // Handled separately via applyDropShadow:toLayer:.
       return nil;
   }
 }

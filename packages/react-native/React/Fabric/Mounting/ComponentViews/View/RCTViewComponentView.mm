@@ -17,6 +17,7 @@
 
 #import <RCTSwiftUIWrapper/RCTSwiftUIContainerViewWrapper.h>
 #import <React/RCTAssert.h>
+#import <React/RCTBackdropFilterLayer.h>
 #import <React/RCTBackdropFilterUtils.h>
 #import <React/RCTBackgroundImageUtils.h>
 #import <React/RCTBorderDrawing.h>
@@ -112,6 +113,7 @@ static BOOL RCTViewIsInteractiveAccessibilityElement(UIView *view, const ViewPro
   CALayer *_outlineLayer;
   NSMutableArray<CALayer *> *_boxShadowLayers;
   CALayer *_filterLayer;
+  RCTBackdropFilterLayer *_backdropFilterLayer;
   BOOL _hasBackdropDropShadow;
   NSMutableArray<CALayer *> *_backgroundImageLayers;
   BOOL _needsInvalidateLayer;
@@ -780,6 +782,8 @@ static BOOL RCTLayerTransformCollapsesAxis(CALayer *layer)
   _outlineLayer = nil;
   [_filterLayer removeFromSuperlayer];
   _filterLayer = nil;
+  [_backdropFilterLayer removeFromSuperlayer];
+  _backdropFilterLayer = nil;
   [RCTBackdropFilterUtils clearBackdropFilterFromLayer:self.layer];
   _hasBackdropDropShadow = NO;
   [self clearExistingBackgroundImageLayers];
@@ -1292,12 +1296,18 @@ static RCTBorderStyle RCTBorderStyleFromOutlineStyle(OutlineStyle outlineStyle)
   }
 
   // backdrop filter
+  // CALayer.backgroundFilters is not supported on iOS; use RCTBackdropFilterLayer instead.
   [RCTBackdropFilterUtils clearBackdropFilterFromLayer:self.layer];
+  _backdropFilterLayer = nil;
   _hasBackdropDropShadow = NO;
   if (!_props->backdropFilter.empty()) {
-    NSArray<CIFilter *> *backgroundFilters =
-        [RCTBackdropFilterUtils backgroundFiltersFromFilterFunctions:_props->backdropFilter];
-    self.layer.backgroundFilters = backgroundFilters;
+    RCTBackdropFilterLayer *backdropLayer = [RCTBackdropFilterLayer layer];
+    backdropLayer.filterFunctions = _props->backdropFilter;
+    backdropLayer.hostView = self;
+    backdropLayer.frame = self.bounds;
+    [self.layer insertSublayer:backdropLayer atIndex:0];
+    _backdropFilterLayer = backdropLayer;
+    [backdropLayer setNeedsDisplay];
 
     for (const auto &primitive : _props->backdropFilter) {
       if (primitive.type == FilterType::DropShadow) {

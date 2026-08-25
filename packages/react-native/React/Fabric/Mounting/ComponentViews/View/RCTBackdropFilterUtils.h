@@ -9,33 +9,39 @@
 
 #include <react/renderer/graphics/Filter.h>
 
+#import <CoreImage/CoreImage.h>
 #import <UIKit/UIKit.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- * Converts a list of FilterFunction values into an array of CIFilter objects
- * suitable for use with CALayer.backgroundFilters.
+ * Utilities for rendering CSS backdrop-filter effects on iOS.
  *
- * Returns nil if the filter list is empty.
- * Drop-shadow is excluded from the returned array and must be handled
- * separately via CALayer shadow properties.
+ * CALayer.backgroundFilters is not supported on iOS. The actual rendering is
+ * done by RCTBackdropFilterLayer, which captures the backdrop via
+ * UIView.drawHierarchy:afterScreenUpdates:NO and calls applyCIFilterFunctions:toImage:
+ * to apply the effect chain.
  */
 @interface RCTBackdropFilterUtils : NSObject
 
-+ (nullable NSArray<CIFilter *> *)backgroundFiltersFromFilterFunctions:
-    (const std::vector<facebook::react::FilterFunction> &)filterFunctions;
+/**
+ * Applies filterFunctions as a chained CIFilter pipeline to image and returns
+ * the result. Drop-shadow entries are skipped (they are applied separately via
+ * CALayer shadow properties). Returns the original image if no filters apply.
+ */
++ (CIImage *)applyCIFilterFunctions:
+    (const std::vector<facebook::react::FilterFunction> &)filterFunctions
+                            toImage:(CIImage *)image;
 
 /**
  * Applies CALayer shadow properties for a drop-shadow FilterFunction.
- * Call this separately from backgroundFilters — CALayer cannot express
- * drop-shadow via CIFilter in the backgroundFilters array.
  */
 + (void)applyDropShadow:(const facebook::react::FilterFunction &)filterFunction
                 toLayer:(CALayer *)layer;
 
 /**
- * Clears all backdrop-filter effects previously applied to a layer.
+ * Removes any RCTBackdropFilterLayer sublayer from layer and clears any
+ * shadow properties applied by applyDropShadow:toLayer:.
  */
 + (void)clearBackdropFilterFromLayer:(CALayer *)layer;
 
