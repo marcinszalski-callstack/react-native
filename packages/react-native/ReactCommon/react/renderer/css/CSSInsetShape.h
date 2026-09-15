@@ -37,7 +37,7 @@ struct CSSInsetShape {
 
 template <>
 struct CSSDataTypeParser<CSSInsetShape> {
-  static auto consumeFunctionBlock(const CSSFunctionBlock &func, CSSSyntaxParser &parser)
+  static auto consumeFunctionBlock(const CSSFunctionBlock &func, CSSValueParser &parser)
       -> std::optional<CSSInsetShape>
   {
     if (!iequals(func.name, "inset")) {
@@ -48,7 +48,7 @@ struct CSSDataTypeParser<CSSInsetShape> {
 
     std::vector<std::variant<CSSLength, CSSPercentage>> lengths;
     for (int i = 0; i < 4; ++i) {
-      auto length = parseNextCSSValue<CSSLengthPercentage>(parser);
+      auto length = parser.parseNextValue<CSSLengthPercentage>();
       if (std::holds_alternative<CSSLength>(length)) {
         lengths.push_back(std::get<CSSLength>(length));
       } else if (std::holds_alternative<CSSPercentage>(length)) {
@@ -57,7 +57,7 @@ struct CSSDataTypeParser<CSSInsetShape> {
         break;
       }
 
-      parser.consumeWhitespace();
+      parser.syntaxParser().consumeWhitespace();
     }
 
     if (lengths.empty()) {
@@ -80,15 +80,15 @@ struct CSSDataTypeParser<CSSInsetShape> {
       shape.left = lengths[3];
     }
 
-    parser.consumeWhitespace();
+    parser.syntaxParser().consumeWhitespace();
 
-    auto roundResult = parser.consumeComponentValue<bool>([](const CSSPreservedToken &token) -> bool {
+    auto roundResult = parser.syntaxParser().consumeComponentValue<bool>([](const CSSPreservedToken &token) -> bool {
       return token.type() == CSSTokenType::Ident && fnv1aLowercase(token.stringValue()) == fnv1a("round");
     });
 
     if (roundResult) {
-      parser.consumeWhitespace();
-      auto radius = parseNextCSSValue<CSSLengthPercentage>(parser);
+      parser.syntaxParser().consumeWhitespace();
+      auto radius = parser.parseNextValue<CSSLengthPercentage>();
       if (std::holds_alternative<CSSLength>(radius)) {
         shape.borderRadius = std::get<CSSLength>(radius);
       } else if (std::holds_alternative<CSSPercentage>(radius)) {

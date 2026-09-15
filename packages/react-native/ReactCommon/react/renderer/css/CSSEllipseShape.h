@@ -28,7 +28,7 @@ struct CSSEllipseShape {
 
 template <>
 struct CSSDataTypeParser<CSSEllipseShape> {
-  static auto consumeFunctionBlock(const CSSFunctionBlock &func, CSSSyntaxParser &parser)
+  static auto consumeFunctionBlock(const CSSFunctionBlock &func, CSSValueParser &parser)
       -> std::optional<CSSEllipseShape>
   {
     if (!iequals(func.name, "ellipse")) {
@@ -37,14 +37,14 @@ struct CSSDataTypeParser<CSSEllipseShape> {
 
     CSSEllipseShape shape;
 
-    auto rx = parseNextCSSValue<CSSLengthPercentage>(parser);
+    auto rx = parser.parseNextValue<CSSLengthPercentage>();
     if (std::holds_alternative<CSSLength>(rx)) {
       shape.rx = std::get<CSSLength>(rx);
     } else if (std::holds_alternative<CSSPercentage>(rx)) {
       shape.rx = std::get<CSSPercentage>(rx);
     }
-    parser.consumeWhitespace();
-    auto ry = parseNextCSSValue<CSSLengthPercentage>(parser);
+    parser.syntaxParser().consumeWhitespace();
+    auto ry = parser.parseNextValue<CSSLengthPercentage>();
     if (std::holds_alternative<CSSLength>(ry)) {
       shape.ry = std::get<CSSLength>(ry);
     } else if (std::holds_alternative<CSSPercentage>(ry)) {
@@ -53,22 +53,22 @@ struct CSSDataTypeParser<CSSEllipseShape> {
       shape.ry = shape.rx;
     }
 
-    parser.consumeWhitespace();
+    parser.syntaxParser().consumeWhitespace();
 
-    auto atResult = parser.consumeComponentValue<bool>([](const CSSPreservedToken &token) -> bool {
+    auto atResult = parser.syntaxParser().consumeComponentValue<bool>([](const CSSPreservedToken &token) -> bool {
       return token.type() == CSSTokenType::Ident && fnv1aLowercase(token.stringValue()) == fnv1a("at");
     });
 
     if (atResult) {
-      parser.consumeWhitespace();
-      auto cx = parseNextCSSValue<CSSLengthPercentage>(parser);
+      parser.syntaxParser().consumeWhitespace();
+      auto cx = parser.parseNextValue<CSSLengthPercentage>();
       if (std::holds_alternative<CSSLength>(cx)) {
         shape.cx = std::get<CSSLength>(cx);
       } else if (std::holds_alternative<CSSPercentage>(cx)) {
         shape.cx = std::get<CSSPercentage>(cx);
       }
-      parser.consumeWhitespace();
-      auto cy = parseNextCSSValue<CSSLengthPercentage>(parser);
+      parser.syntaxParser().consumeWhitespace();
+      auto cy = parser.parseNextValue<CSSLengthPercentage>();
       if (std::holds_alternative<CSSLength>(cy)) {
         shape.cy = std::get<CSSLength>(cy);
       } else if (std::holds_alternative<CSSPercentage>(cy)) {

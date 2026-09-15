@@ -99,12 +99,12 @@ struct CSSClipPath {
 
 template <>
 struct CSSDataTypeParser<CSSClipPath> {
-  static auto consume(CSSSyntaxParser &parser) -> std::optional<CSSClipPath>
+  static auto consume(CSSValueParser &parser) -> std::optional<CSSClipPath>
   {
-    auto shape = parseNextCSSValue<CSSBasicShapeTypes>(parser);
+    auto shape = parser.parseNextValue<CSSBasicShapeTypes>();
 
     if (!std::holds_alternative<std::monostate>(shape)) {
-      auto geometryBox = parseNextCSSValue<CSSGeometryBox>(parser, CSSDelimiter::Whitespace);
+      auto geometryBox = parser.parseNextValue<CSSGeometryBox>(CSSDelimiter::Whitespace);
 
       CSSClipPath result;
       if (std::holds_alternative<CSSInsetShape>(shape)) {
@@ -128,10 +128,10 @@ struct CSSDataTypeParser<CSSClipPath> {
       return result;
     }
 
-    auto geometryBox = parseNextCSSValue<CSSGeometryBox>(parser);
+    auto geometryBox = parser.parseNextValue<CSSGeometryBox>();
 
     if (!std::holds_alternative<std::monostate>(geometryBox)) {
-      auto shapeAfter = parseNextCSSValue<CSSBasicShapeTypes>(parser, CSSDelimiter::Whitespace);
+      auto shapeAfter = parser.parseNextValue<CSSBasicShapeTypes>(CSSDelimiter::Whitespace);
 
       CSSClipPath result;
       result.geometryBox = std::get<CSSGeometryBox>(geometryBox);
