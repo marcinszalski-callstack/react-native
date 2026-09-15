@@ -36,34 +36,34 @@ struct CSSXywhShape {
 
 template <>
 struct CSSDataTypeParser<CSSXywhShape> {
-  static auto consumeFunctionBlock(const CSSFunctionBlock &func, CSSSyntaxParser &parser) -> std::optional<CSSXywhShape>
+  static auto consumeFunctionBlock(const CSSFunctionBlock &func, CSSValueParser &parser) -> std::optional<CSSXywhShape>
   {
     if (!iequals(func.name, "xywh")) {
       return {};
     }
 
-    auto x = parseNextCSSValue<CSSLengthPercentage>(parser);
+    auto x = parser.parseNextValue<CSSLengthPercentage>();
     if (std::holds_alternative<std::monostate>(x)) {
       return std::nullopt;
     }
 
-    parser.consumeWhitespace();
+    parser.syntaxParser().consumeWhitespace();
 
-    auto y = parseNextCSSValue<CSSLengthPercentage>(parser);
+    auto y = parser.parseNextValue<CSSLengthPercentage>();
     if (std::holds_alternative<std::monostate>(y)) {
       return std::nullopt;
     }
 
-    parser.consumeWhitespace();
+    parser.syntaxParser().consumeWhitespace();
 
-    auto width = parseNextCSSValue<CSSLengthPercentage>(parser);
+    auto width = parser.parseNextValue<CSSLengthPercentage>();
     if (std::holds_alternative<std::monostate>(width)) {
       return std::nullopt;
     }
 
-    parser.consumeWhitespace();
+    parser.syntaxParser().consumeWhitespace();
 
-    auto height = parseNextCSSValue<CSSLengthPercentage>(parser);
+    auto height = parser.parseNextValue<CSSLengthPercentage>();
     if (std::holds_alternative<std::monostate>(height)) {
       return std::nullopt;
     }
@@ -94,15 +94,15 @@ struct CSSDataTypeParser<CSSXywhShape> {
       shape.height = std::get<CSSPercentage>(height);
     }
 
-    parser.consumeWhitespace();
+    parser.syntaxParser().consumeWhitespace();
 
-    auto roundResult = parser.consumeComponentValue<bool>([](const CSSPreservedToken &token) -> bool {
+    auto roundResult = parser.syntaxParser().consumeComponentValue<bool>([](const CSSPreservedToken &token) -> bool {
       return token.type() == CSSTokenType::Ident && fnv1aLowercase(token.stringValue()) == fnv1a("round");
     });
 
     if (roundResult) {
-      parser.consumeWhitespace();
-      auto radius = parseNextCSSValue<CSSLengthPercentage>(parser);
+      parser.syntaxParser().consumeWhitespace();
+      auto radius = parser.parseNextValue<CSSLengthPercentage>();
       if (std::holds_alternative<CSSLength>(radius)) {
         shape.borderRadius = std::get<CSSLength>(radius);
       } else if (std::holds_alternative<CSSPercentage>(radius)) {

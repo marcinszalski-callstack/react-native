@@ -53,7 +53,7 @@ struct CSSPolygonShape {
 
 template <>
 struct CSSDataTypeParser<CSSPolygonShape> {
-  static auto consumeFunctionBlock(const CSSFunctionBlock &func, CSSSyntaxParser &parser)
+  static auto consumeFunctionBlock(const CSSFunctionBlock &func, CSSValueParser &parser)
       -> std::optional<CSSPolygonShape>
   {
     if (!iequals(func.name, "polygon")) {
@@ -62,22 +62,22 @@ struct CSSDataTypeParser<CSSPolygonShape> {
 
     CSSPolygonShape shape;
 
-    auto firstValue = parseNextCSSValue<CSSFillRule>(parser);
+    auto firstValue = parser.parseNextValue<CSSFillRule>();
     if (std::holds_alternative<CSSFillRule>(firstValue)) {
       shape.fillRule = std::get<CSSFillRule>(firstValue);
-      parser.consumeDelimiter(CSSDelimiter::Comma);
-      parser.consumeWhitespace();
+      parser.syntaxParser().consumeDelimiter(CSSDelimiter::Comma);
+      parser.syntaxParser().consumeWhitespace();
     }
 
     do {
-      auto x = parseNextCSSValue<CSSLengthPercentage>(parser);
+      auto x = parser.parseNextValue<CSSLengthPercentage>();
       if (std::holds_alternative<std::monostate>(x)) {
         break;
       }
 
-      parser.consumeWhitespace();
+      parser.syntaxParser().consumeWhitespace();
 
-      auto y = parseNextCSSValue<CSSLengthPercentage>(parser);
+      auto y = parser.parseNextValue<CSSLengthPercentage>();
       if (std::holds_alternative<std::monostate>(y)) {
         return {};
       }
@@ -98,7 +98,7 @@ struct CSSDataTypeParser<CSSPolygonShape> {
       }
 
       shape.points.emplace_back(xValue, yValue);
-    } while (parser.consumeDelimiter(CSSDelimiter::Comma));
+    } while (parser.syntaxParser().consumeDelimiter(CSSDelimiter::Comma));
 
     if (shape.points.size() < 3) {
       return {};

@@ -31,34 +31,34 @@ struct CSSRectShape {
 
 template <>
 struct CSSDataTypeParser<CSSRectShape> {
-  static auto consumeFunctionBlock(const CSSFunctionBlock &func, CSSSyntaxParser &parser) -> std::optional<CSSRectShape>
+  static auto consumeFunctionBlock(const CSSFunctionBlock &func, CSSValueParser &parser) -> std::optional<CSSRectShape>
   {
     if (!iequals(func.name, "rect")) {
       return {};
     }
 
-    auto top = parseNextCSSValue<CSSKeyword, CSSLengthPercentage>(parser);
+    auto top = parser.parseNextValue<CSSKeyword, CSSLengthPercentage>();
     if (std::holds_alternative<std::monostate>(top)) {
       return std::nullopt;
     }
 
-    parser.consumeWhitespace();
+    parser.syntaxParser().consumeWhitespace();
 
-    auto right = parseNextCSSValue<CSSKeyword, CSSLengthPercentage>(parser);
+    auto right = parser.parseNextValue<CSSKeyword, CSSLengthPercentage>();
     if (std::holds_alternative<std::monostate>(right)) {
       return std::nullopt;
     }
 
-    parser.consumeWhitespace();
+    parser.syntaxParser().consumeWhitespace();
 
-    auto bottom = parseNextCSSValue<CSSKeyword, CSSLengthPercentage>(parser);
+    auto bottom = parser.parseNextValue<CSSKeyword, CSSLengthPercentage>();
     if (std::holds_alternative<std::monostate>(bottom)) {
       return std::nullopt;
     }
 
-    parser.consumeWhitespace();
+    parser.syntaxParser().consumeWhitespace();
 
-    auto left = parseNextCSSValue<CSSKeyword, CSSLengthPercentage>(parser);
+    auto left = parser.parseNextValue<CSSKeyword, CSSLengthPercentage>();
     if (std::holds_alternative<std::monostate>(left)) {
       return std::nullopt;
     }
@@ -97,15 +97,15 @@ struct CSSDataTypeParser<CSSRectShape> {
       shape.left = CSSPercentage{0.0f};
     }
 
-    parser.consumeWhitespace();
+    parser.syntaxParser().consumeWhitespace();
 
-    auto roundResult = parser.consumeComponentValue<bool>([](const CSSPreservedToken &token) -> bool {
+    auto roundResult = parser.syntaxParser().consumeComponentValue<bool>([](const CSSPreservedToken &token) -> bool {
       return token.type() == CSSTokenType::Ident && fnv1aLowercase(token.stringValue()) == fnv1a("round");
     });
 
     if (roundResult) {
-      parser.consumeWhitespace();
-      auto radius = parseNextCSSValue<CSSLengthPercentage>(parser);
+      parser.syntaxParser().consumeWhitespace();
+      auto radius = parser.parseNextValue<CSSLengthPercentage>();
       if (std::holds_alternative<CSSLength>(radius)) {
         shape.borderRadius = std::get<CSSLength>(radius);
       } else if (std::holds_alternative<CSSPercentage>(radius)) {

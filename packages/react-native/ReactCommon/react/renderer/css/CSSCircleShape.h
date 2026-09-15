@@ -27,7 +27,7 @@ struct CSSCircleShape {
 
 template <>
 struct CSSDataTypeParser<CSSCircleShape> {
-  static auto consumeFunctionBlock(const CSSFunctionBlock &func, CSSSyntaxParser &parser)
+  static auto consumeFunctionBlock(const CSSFunctionBlock &func, CSSValueParser &parser)
       -> std::optional<CSSCircleShape>
   {
     if (!iequals(func.name, "circle")) {
@@ -36,27 +36,27 @@ struct CSSDataTypeParser<CSSCircleShape> {
 
     CSSCircleShape shape;
 
-    auto radius = parseNextCSSValue<CSSLengthPercentage>(parser);
+    auto radius = parser.parseNextValue<CSSLengthPercentage>();
     if (std::holds_alternative<CSSLength>(radius)) {
       shape.radius = std::get<CSSLength>(radius);
     } else if (std::holds_alternative<CSSPercentage>(radius)) {
       shape.radius = std::get<CSSPercentage>(radius);
     }
-    parser.consumeWhitespace();
-    auto atResult = parser.consumeComponentValue<bool>([](const CSSPreservedToken &token) -> bool {
+    parser.syntaxParser().consumeWhitespace();
+    auto atResult = parser.syntaxParser().consumeComponentValue<bool>([](const CSSPreservedToken &token) -> bool {
       return token.type() == CSSTokenType::Ident && fnv1aLowercase(token.stringValue()) == fnv1a("at");
     });
 
     if (atResult) {
-      parser.consumeWhitespace();
-      auto cx = parseNextCSSValue<CSSLengthPercentage>(parser);
+      parser.syntaxParser().consumeWhitespace();
+      auto cx = parser.parseNextValue<CSSLengthPercentage>();
       if (std::holds_alternative<CSSLength>(cx)) {
         shape.cx = std::get<CSSLength>(cx);
       } else if (std::holds_alternative<CSSPercentage>(cx)) {
         shape.cx = std::get<CSSPercentage>(cx);
       }
-      parser.consumeWhitespace();
-      auto cy = parseNextCSSValue<CSSLengthPercentage>(parser);
+      parser.syntaxParser().consumeWhitespace();
+      auto cy = parser.parseNextValue<CSSLengthPercentage>();
       if (std::holds_alternative<CSSLength>(cy)) {
         shape.cy = std::get<CSSLength>(cy);
       } else if (std::holds_alternative<CSSPercentage>(cy)) {
