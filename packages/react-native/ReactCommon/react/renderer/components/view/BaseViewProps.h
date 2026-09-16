@@ -27,6 +27,7 @@
 #include <react/renderer/graphics/Isolation.h>
 #include <react/renderer/graphics/Transform.h>
 
+#include <memory>
 #include <optional>
 
 namespace facebook::react {
@@ -112,7 +113,7 @@ class BaseViewProps : public YogaStylableProps, public AccessibilityProps {
 
   bool removeClippedSubviews{false};
 
-  std::optional<ClipPath> clipPath{};
+  std::unique_ptr<ClipPath> clipPath{};
 
 #pragma mark - Convenience Methods
 

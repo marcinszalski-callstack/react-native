@@ -1375,9 +1375,9 @@ static RCTBorderStyle RCTBorderStyleFromOutlineStyle(OutlineStyle outlineStyle)
   self.currentContainerView.layer.mask = nil;
 
   // Handle clip-path property
-  if (_props->clipPath.has_value()) {
+  if (_props->clipPath != nullptr) {
 		if (auto yogaStylableProps = std::static_pointer_cast<const YogaStylableProps>(_props)) {
-			CALayer *maskLayer = [RCTClipPathUtils createClipPathLayer:_props->clipPath.value()
+			CALayer *maskLayer = [RCTClipPathUtils createClipPathLayer:*_props->clipPath
 																									 layoutMetrics:_layoutMetrics
 																							 yogaStylableProps:*yogaStylableProps.get()
 																													bounds:layer.bounds

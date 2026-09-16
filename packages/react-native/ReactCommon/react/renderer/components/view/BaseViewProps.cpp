@@ -323,12 +323,19 @@ BaseViewProps::BaseViewProps(
           "removeClippedSubviews",
           sourceProps.removeClippedSubviews,
           false)),
-      clipPath(convertRawProp(
-          context,
-          rawProps,
-          "clipPath",
-          sourceProps.clipPath,
-          {})) {}
+      clipPath([&]() -> std::unique_ptr<ClipPath> {
+        auto optionalClipPath = convertRawProp(
+            context,
+            rawProps,
+            "clipPath",
+            sourceProps.clipPath
+                ? std::make_optional(*sourceProps.clipPath)
+                : std::nullopt,
+            std::nullopt);
+        return optionalClipPath
+            ? std::make_unique<ClipPath>(std::move(*optionalClipPath))
+            : nullptr;
+      }()) {}
 
 #define VIEW_EVENT_CASE(eventType)                      \
   case CONSTEXPR_RAW_PROPS_KEY_HASH("on" #eventType): { \
@@ -391,7 +398,14 @@ void BaseViewProps::setProp(
     RAW_SET_PROP_SWITCH_CASE_BASIC(filter);
     RAW_SET_PROP_SWITCH_CASE_BASIC(boxShadow);
     RAW_SET_PROP_SWITCH_CASE_BASIC(mixBlendMode);
-    RAW_SET_PROP_SWITCH_CASE_BASIC(clipPath);
+    case CONSTEXPR_RAW_PROPS_KEY_HASH("clipPath"): {
+      std::optional<ClipPath> parsedClipPath;
+      fromRawValue(context, value, parsedClipPath);
+      clipPath = parsedClipPath
+          ? std::make_unique<ClipPath>(std::move(*parsedClipPath))
+          : nullptr;
+      return;
+    }
     // events field
     VIEW_EVENT_CASE(PointerEnter);
     VIEW_EVENT_CASE(PointerEnterCapture);
