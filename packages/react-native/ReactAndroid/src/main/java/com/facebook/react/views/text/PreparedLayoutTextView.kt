@@ -120,9 +120,7 @@ internal class PreparedLayoutTextView(context: Context) : ViewGroup(context), Re
   }
 
   override fun draw(canvas: Canvas) {
-    BackgroundStyleApplicator.applyClipPathIfPresent(this, canvas) {
-      super.draw(canvas)
-    }
+    BackgroundStyleApplicator.applyClipPathIfPresent(this, canvas) { super.draw(canvas) }
   }
 
   @OptIn(UnstableReactNativeAPI::class)

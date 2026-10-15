@@ -1271,9 +1271,7 @@ public open class ReactEditText public constructor(context: Context) : AppCompat
   }
 
   public override fun draw(canvas: Canvas) {
-    BackgroundStyleApplicator.applyClipPathIfPresent(this, canvas) {
-      super.draw(canvas)
-    }
+    BackgroundStyleApplicator.applyClipPathIfPresent(this, canvas) { super.draw(canvas) }
   }
 
   public override fun onDraw(canvas: Canvas) {
